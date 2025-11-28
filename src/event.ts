@@ -1,12 +1,6 @@
-import type { GetStatusResponse } from "@/model";
-import {
-  Sakiko,
-  SakikoBaseEvent,
-  SakikoMessageEvent,
-  SakikoMetaEvent,
-  SakikoNoticeEvent
-} from "@grouptogawa/sakiko";
-import type { Message, SakikoAdapterOnebot } from ".";
+import type {GetStatusResponse} from "@/model";
+import {Sakiko, SakikoBaseEvent, SakikoMessageEvent, SakikoMetaEvent, SakikoNoticeEvent} from "@grouptogawa/sakiko";
+import type {Message, SakikoAdapterOnebot} from ".";
 
 /**
  * 这个文件里是各种 Onebot v11 事件的定义
@@ -68,9 +62,7 @@ interface MessageSender {
  *
  * @template TSubType 私聊子类型或群聊子类型
  */
-export class MessageEvent<
-  TSubType extends SubTypePrivate | SubTypeGroup
-> extends SakikoMessageEvent {
+export class MessageEvent<TSubType extends SubTypePrivate | SubTypeGroup> extends SakikoMessageEvent {
   private adapter: SakikoAdapterOnebot;
 
   time: number;
@@ -151,20 +143,7 @@ export class PrivateMessageEvent extends MessageEvent<SubTypePrivate> {
     targetId?: number,
     tempSource?: number
   ) {
-    super(
-      sakiko,
-      adapter,
-      time,
-      selfId,
-      messageType,
-      subType,
-      messageId,
-      userId,
-      message,
-      rawMessage,
-      font,
-      sender
-    );
+    super(sakiko, adapter, time, selfId, messageType, subType, messageId, userId, message, rawMessage, font, sender);
     this.targetId = targetId;
     this.tempSource = tempSource;
   }
@@ -194,20 +173,7 @@ export class GroupMessageEvent extends MessageEvent<SubTypeGroup> {
     font: number,
     sender: MessageSender
   ) {
-    super(
-      sakiko,
-      adapter,
-      time,
-      selfId,
-      messageType,
-      subType,
-      messageId,
-      userId,
-      message,
-      rawMessage,
-      font,
-      sender
-    );
+    super(sakiko, adapter, time, selfId, messageType, subType, messageId, userId, message, rawMessage, font, sender);
     this.groupId = groupId;
     this.anonymous = anonymous;
   }
@@ -246,13 +212,7 @@ export class NoticeEvent extends SakikoNoticeEvent {
   postType: PostType;
   noticeType: NoticeType;
 
-  constructor(
-    sakiko: Sakiko,
-    adapter: SakikoAdapterOnebot,
-    time: number,
-    selfId: string,
-    noticeType: NoticeType
-  ) {
+  constructor(sakiko: Sakiko, adapter: SakikoAdapterOnebot, time: number, selfId: string, noticeType: NoticeType) {
     super(sakiko);
     this.adapter = adapter;
     this.time = time;
@@ -274,15 +234,7 @@ export class GroupNoticeEvent extends NoticeEvent {
   groupId: number;
   userId: number;
 
-  constructor(
-    sakiko: Sakiko,
-    adapter: SakikoAdapterOnebot,
-    time: number,
-    selfId: string,
-    noticeType: NoticeType,
-    groupId: number,
-    userId: number
-  ) {
+  constructor(sakiko: Sakiko, adapter: SakikoAdapterOnebot, time: number, selfId: string, noticeType: NoticeType, groupId: number, userId: number) {
     super(sakiko, adapter, time, selfId, noticeType);
     this.groupId = groupId;
     this.userId = userId;
@@ -304,24 +256,8 @@ interface GroupUploadFile {
 export class GroupUploadNoticeEvent extends GroupNoticeEvent {
   file: GroupUploadFile;
 
-  constructor(
-    sakiko: Sakiko,
-    adapter: SakikoAdapterOnebot,
-    time: number,
-    selfId: string,
-    groupId: number,
-    userId: number,
-    file: GroupUploadFile
-  ) {
-    super(
-      sakiko,
-      adapter,
-      time,
-      selfId,
-      NoticeType.GROUP_UPLOAD,
-      groupId,
-      userId
-    );
+  constructor(sakiko: Sakiko, adapter: SakikoAdapterOnebot, time: number, selfId: string, groupId: number, userId: number, file: GroupUploadFile) {
+    super(sakiko, adapter, time, selfId, NoticeType.GROUP_UPLOAD, groupId, userId);
     this.file = file;
   }
 }
@@ -339,24 +275,8 @@ enum GroupAdminSubType {
 export class GroupAdminNoticeEvent extends GroupNoticeEvent {
   subType: GroupAdminSubType;
 
-  constructor(
-    sakiko: Sakiko,
-    adapter: SakikoAdapterOnebot,
-    time: number,
-    selfId: string,
-    groupId: number,
-    userId: number,
-    subType: GroupAdminSubType
-  ) {
-    super(
-      sakiko,
-      adapter,
-      time,
-      selfId,
-      NoticeType.GROUP_ADMIN,
-      groupId,
-      userId
-    );
+  constructor(sakiko: Sakiko, adapter: SakikoAdapterOnebot, time: number, selfId: string, groupId: number, userId: number, subType: GroupAdminSubType) {
+    super(sakiko, adapter, time, selfId, NoticeType.GROUP_ADMIN, groupId, userId);
     this.subType = subType;
   }
 }
@@ -376,25 +296,8 @@ export class GroupDecreaseNoticeEvent extends GroupNoticeEvent {
   operatorId: number;
   subType: GroupDecreaseSubType;
 
-  constructor(
-    sakiko: Sakiko,
-    adapter: SakikoAdapterOnebot,
-    time: number,
-    selfId: string,
-    groupId: number,
-    userId: number,
-    operatorId: number,
-    subType: GroupDecreaseSubType
-  ) {
-    super(
-      sakiko,
-      adapter,
-      time,
-      selfId,
-      NoticeType.GROUP_DECREASE,
-      groupId,
-      userId
-    );
+  constructor(sakiko: Sakiko, adapter: SakikoAdapterOnebot, time: number, selfId: string, groupId: number, userId: number, operatorId: number, subType: GroupDecreaseSubType) {
+    super(sakiko, adapter, time, selfId, NoticeType.GROUP_DECREASE, groupId, userId);
     this.operatorId = operatorId;
     this.subType = subType;
   }
@@ -414,25 +317,8 @@ export class GroupIncreaseNoticeEvent extends GroupNoticeEvent {
   operatorId: number;
   subType: GroupIncreaseSubType;
 
-  constructor(
-    sakiko: Sakiko,
-    adapter: SakikoAdapterOnebot,
-    time: number,
-    selfId: string,
-    groupId: number,
-    userId: number,
-    operatorId: number,
-    subType: GroupIncreaseSubType
-  ) {
-    super(
-      sakiko,
-      adapter,
-      time,
-      selfId,
-      NoticeType.GROUP_INCREASE,
-      groupId,
-      userId
-    );
+  constructor(sakiko: Sakiko, adapter: SakikoAdapterOnebot, time: number, selfId: string, groupId: number, userId: number, operatorId: number, subType: GroupIncreaseSubType) {
+    super(sakiko, adapter, time, selfId, NoticeType.GROUP_INCREASE, groupId, userId);
     this.operatorId = operatorId;
     this.subType = subType;
   }
@@ -452,17 +338,7 @@ export class GroupBanNoticeEvent extends GroupNoticeEvent {
   operatorId: number;
   duration: number;
   subType: GroupBanSubType;
-  constructor(
-    sakiko: Sakiko,
-    adapter: SakikoAdapterOnebot,
-    time: number,
-    selfId: string,
-    groupId: number,
-    userId: number,
-    operatorId: number,
-    duration: number,
-    subType: GroupBanSubType
-  ) {
+  constructor(sakiko: Sakiko, adapter: SakikoAdapterOnebot, time: number, selfId: string, groupId: number, userId: number, operatorId: number, duration: number, subType: GroupBanSubType) {
     super(sakiko, adapter, time, selfId, NoticeType.GROUP_BAN, groupId, userId);
     this.operatorId = operatorId;
     this.subType = subType;
@@ -476,13 +352,7 @@ export class GroupBanNoticeEvent extends GroupNoticeEvent {
  */
 export class FriendAddNoticeEvent extends NoticeEvent {
   userId: number;
-  constructor(
-    sakiko: Sakiko,
-    adapter: SakikoAdapterOnebot,
-    time: number,
-    selfId: string,
-    userId: number
-  ) {
+  constructor(sakiko: Sakiko, adapter: SakikoAdapterOnebot, time: number, selfId: string, userId: number) {
     super(sakiko, adapter, time, selfId, NoticeType.FRIEND_ADD);
     this.userId = userId;
   }
@@ -496,25 +366,8 @@ export class GroupRecallNoticeEvent extends GroupNoticeEvent {
   operatorId: number;
   messageId: number;
 
-  constructor(
-    sakiko: Sakiko,
-    adapter: SakikoAdapterOnebot,
-    time: number,
-    selfId: string,
-    operatorId: number,
-    messageId: number,
-    groupId: number,
-    userId: number
-  ) {
-    super(
-      sakiko,
-      adapter,
-      time,
-      selfId,
-      NoticeType.GROUP_RECALL,
-      groupId,
-      userId
-    );
+  constructor(sakiko: Sakiko, adapter: SakikoAdapterOnebot, time: number, selfId: string, operatorId: number, messageId: number, groupId: number, userId: number) {
+    super(sakiko, adapter, time, selfId, NoticeType.GROUP_RECALL, groupId, userId);
     this.operatorId = operatorId;
     this.messageId = messageId;
   }
@@ -528,14 +381,7 @@ export class FriendRecallNoticeEvent extends NoticeEvent {
   userId: number;
   messageId: number;
 
-  constructor(
-    sakiko: Sakiko,
-    adapter: SakikoAdapterOnebot,
-    time: number,
-    selfId: string,
-    userId: number,
-    messageId: number
-  ) {
+  constructor(sakiko: Sakiko, adapter: SakikoAdapterOnebot, time: number, selfId: string, userId: number, messageId: number) {
     super(sakiko, adapter, time, selfId, NoticeType.FRIEND_RECALL);
     this.userId = userId;
     this.messageId = messageId;
@@ -560,13 +406,7 @@ export enum NotifySubType {
 export class NotifyNoticeEvent extends NoticeEvent {
   subType: NotifySubType;
 
-  constructor(
-    sakiko: Sakiko,
-    adapter: SakikoAdapterOnebot,
-    time: number,
-    selfId: string,
-    subType: NotifySubType
-  ) {
+  constructor(sakiko: Sakiko, adapter: SakikoAdapterOnebot, time: number, selfId: string, subType: NotifySubType) {
     super(sakiko, adapter, time, selfId, NoticeType.NOTIFY);
     this.subType = subType;
   }
@@ -580,14 +420,7 @@ export class PokeNoticeEvent extends NotifyNoticeEvent {
   userId: number;
   targetId: number;
 
-  constructor(
-    sakiko: Sakiko,
-    adapter: SakikoAdapterOnebot,
-    time: number,
-    selfId: string,
-    userId: number,
-    targetId: number
-  ) {
+  constructor(sakiko: Sakiko, adapter: SakikoAdapterOnebot, time: number, selfId: string, userId: number, targetId: number) {
     super(sakiko, adapter, time, selfId, NotifySubType.POKE);
     this.userId = userId;
     this.targetId = targetId;
@@ -602,16 +435,7 @@ export class FriendPokeNoticeEvent extends PokeNoticeEvent {
   rawInfo: unknown;
   senderId: number;
 
-  constructor(
-    sakiko: Sakiko,
-    adapter: SakikoAdapterOnebot,
-    time: number,
-    selfId: string,
-    userId: number,
-    targetId: number,
-    rawInfo: unknown,
-    senderId: number
-  ) {
+  constructor(sakiko: Sakiko, adapter: SakikoAdapterOnebot, time: number, selfId: string, userId: number, targetId: number, rawInfo: unknown, senderId: number) {
     super(sakiko, adapter, time, selfId, userId, targetId);
     this.rawInfo = rawInfo;
     this.senderId = senderId;
@@ -626,16 +450,7 @@ export class GroupPokeNoticeEvent extends PokeNoticeEvent {
   rawInfo: unknown;
   groupId: number;
 
-  constructor(
-    sakiko: Sakiko,
-    adapter: SakikoAdapterOnebot,
-    time: number,
-    selfId: string,
-    userId: number,
-    targetId: number,
-    rawInfo: unknown,
-    groupId: number
-  ) {
+  constructor(sakiko: Sakiko, adapter: SakikoAdapterOnebot, time: number, selfId: string, userId: number, targetId: number, rawInfo: unknown, groupId: number) {
     super(sakiko, adapter, time, selfId, userId, targetId);
     this.rawInfo = rawInfo;
     this.groupId = groupId;
@@ -651,15 +466,7 @@ export class LuckyKingNoticeEvent extends NotifyNoticeEvent {
   userId: number;
   targetId: number;
 
-  constructor(
-    sakiko: Sakiko,
-    adapter: SakikoAdapterOnebot,
-    time: number,
-    selfId: string,
-    groupId: number,
-    userId: number,
-    targetId: number
-  ) {
+  constructor(sakiko: Sakiko, adapter: SakikoAdapterOnebot, time: number, selfId: string, groupId: number, userId: number, targetId: number) {
     super(sakiko, adapter, time, selfId, NotifySubType.LUCKY_KING);
     this.groupId = groupId;
     this.userId = userId;
@@ -682,15 +489,7 @@ export class HonorNoticeEvent extends NotifyNoticeEvent {
   honorType: HonorType;
   userId: number;
 
-  constructor(
-    sakiko: Sakiko,
-    adapter: SakikoAdapterOnebot,
-    time: number,
-    selfId: string,
-    groupId: number,
-    honorType: HonorType,
-    userId: number
-  ) {
+  constructor(sakiko: Sakiko, adapter: SakikoAdapterOnebot, time: number, selfId: string, groupId: number, honorType: HonorType, userId: number) {
     super(sakiko, adapter, time, selfId, NotifySubType.HONOR);
     this.groupId = groupId;
     this.honorType = honorType;
@@ -711,25 +510,8 @@ export class GroupMsgEmojiLikeNoticeEvent extends GroupNoticeEvent {
   messageId: number;
   likes: MsgEmojiLike[];
 
-  constructor(
-    sakiko: Sakiko,
-    adapter: SakikoAdapterOnebot,
-    time: number,
-    selfId: string,
-    groupId: number,
-    userId: number,
-    messageId: number,
-    likes: MsgEmojiLike[]
-  ) {
-    super(
-      sakiko,
-      adapter,
-      time,
-      selfId,
-      NoticeType.GROUP_MSG_EMOJI_LIKE,
-      groupId,
-      userId
-    );
+  constructor(sakiko: Sakiko, adapter: SakikoAdapterOnebot, time: number, selfId: string, groupId: number, userId: number, messageId: number, likes: MsgEmojiLike[]) {
+    super(sakiko, adapter, time, selfId, NoticeType.GROUP_MSG_EMOJI_LIKE, groupId, userId);
     this.messageId = messageId;
     this.likes = likes;
   }
@@ -777,25 +559,8 @@ export class GroupCardNoticeEvent extends GroupNoticeEvent {
   cardNew: string;
   cardOld: string;
 
-  constructor(
-    sakiko: Sakiko,
-    adapter: SakikoAdapterOnebot,
-    time: number,
-    selfId: string,
-    groupId: number,
-    userId: number,
-    cardNew: string,
-    cardOld: string
-  ) {
-    super(
-      sakiko,
-      adapter,
-      time,
-      selfId,
-      NoticeType.GROUP_CARD,
-      groupId,
-      userId
-    );
+  constructor(sakiko: Sakiko, adapter: SakikoAdapterOnebot, time: number, selfId: string, groupId: number, userId: number, cardNew: string, cardOld: string) {
+    super(sakiko, adapter, time, selfId, NoticeType.GROUP_CARD, groupId, userId);
     this.cardNew = cardNew;
     this.cardOld = cardOld;
   }
@@ -810,15 +575,7 @@ export class GroupNameNoticeEvent extends NotifyNoticeEvent {
   userId: number;
   nameNew: string;
 
-  constructor(
-    sakiko: Sakiko,
-    adapter: SakikoAdapterOnebot,
-    time: number,
-    selfId: string,
-    nameNew: string,
-    groupId: number,
-    userId: number
-  ) {
+  constructor(sakiko: Sakiko, adapter: SakikoAdapterOnebot, time: number, selfId: string, nameNew: string, groupId: number, userId: number) {
     super(sakiko, adapter, time, selfId, NotifySubType.GROUP_NAME);
     this.nameNew = nameNew;
     this.groupId = groupId;
@@ -835,15 +592,7 @@ export class GroupTitleNoticeEvent extends NotifyNoticeEvent {
   userId: number;
   title: string;
 
-  constructor(
-    sakiko: Sakiko,
-    adapter: SakikoAdapterOnebot,
-    time: number,
-    selfId: string,
-    title: string,
-    groupId: number,
-    userId: number
-  ) {
+  constructor(sakiko: Sakiko, adapter: SakikoAdapterOnebot, time: number, selfId: string, title: string, groupId: number, userId: number) {
     super(sakiko, adapter, time, selfId, NotifySubType.TITLE);
     this.groupId = groupId;
     this.userId = userId;
@@ -860,15 +609,7 @@ export class ProfileLikeNoticeEvent extends NotifyNoticeEvent {
   operatorNick: string;
   times: number;
 
-  constructor(
-    sakiko: Sakiko,
-    adapter: SakikoAdapterOnebot,
-    time: number,
-    selfId: string,
-    operatorId: number,
-    operatorNick: string,
-    times: number
-  ) {
+  constructor(sakiko: Sakiko, adapter: SakikoAdapterOnebot, time: number, selfId: string, operatorId: number, operatorNick: string, times: number) {
     super(sakiko, adapter, time, selfId, NotifySubType.PROFILE_LIKE);
     this.operatorId = operatorId;
     this.operatorNick = operatorNick;
@@ -885,16 +626,7 @@ export class InputStatusNoticeEvent extends NotifyNoticeEvent {
   eventType: number;
   userId: number;
   groupId?: number;
-  constructor(
-    sakiko: Sakiko,
-    adapter: SakikoAdapterOnebot,
-    time: number,
-    selfId: string,
-    statusText: string,
-    eventType: number,
-    userId: number,
-    groupId?: number
-  ) {
+  constructor(sakiko: Sakiko, adapter: SakikoAdapterOnebot, time: number, selfId: string, statusText: string, eventType: number, userId: number, groupId?: number) {
     super(sakiko, adapter, time, selfId, NotifySubType.INPUT_STATUS);
     this.statusText = statusText;
     this.eventType = eventType;
@@ -914,16 +646,7 @@ export class BotOfflineNoticeEvent extends NoticeEvent {
 
   side: "protocol" | "adapter" = "protocol";
 
-  constructor(
-    sakiko: Sakiko,
-    adapter: SakikoAdapterOnebot,
-    time: number,
-    selfId: string,
-    userId: number,
-    tag: string,
-    message: string,
-    side?: "protocol" | "adapter"
-  ) {
+  constructor(sakiko: Sakiko, adapter: SakikoAdapterOnebot, time: number, selfId: string, userId: number, tag: string, message: string, side?: "protocol" | "adapter") {
     super(sakiko, adapter, time, selfId, NoticeType.OFFLINE);
     this.userId = userId;
     this.tag = tag;
@@ -956,16 +679,7 @@ export class RequestEvent extends SakikoBaseEvent {
   userId: number;
   comment: string;
 
-  constructor(
-    sakiko: Sakiko,
-    adapter: SakikoAdapterOnebot,
-    time: number,
-    selfId: string,
-    requestType: RequestType,
-    flag: string,
-    userId: number,
-    comment: string
-  ) {
+  constructor(sakiko: Sakiko, adapter: SakikoAdapterOnebot, time: number, selfId: string, requestType: RequestType, flag: string, userId: number, comment: string) {
     super(sakiko);
     this.adapter = adapter;
     this.time = time;
@@ -976,6 +690,10 @@ export class RequestEvent extends SakikoBaseEvent {
     this.userId = userId;
     this.comment = comment;
   }
+
+  getAdapter() {
+    return this.adapter;
+  }
 }
 
 /**
@@ -983,16 +701,7 @@ export class RequestEvent extends SakikoBaseEvent {
  * @extends RequestEvent
  */
 export class FriendRequestEvent extends RequestEvent {
-  constructor(
-    sakiko: Sakiko,
-    adapter: SakikoAdapterOnebot,
-    time: number,
-    selfId: string,
-    requestType: RequestType,
-    flag: string,
-    userId: number,
-    comment: string
-  ) {
+  constructor(sakiko: Sakiko, adapter: SakikoAdapterOnebot, time: number, selfId: string, requestType: RequestType, flag: string, userId: number, comment: string) {
     super(sakiko, adapter, time, selfId, requestType, flag, userId, comment);
   }
 }
@@ -1049,19 +758,17 @@ export class MetaEvent extends SakikoMetaEvent {
   postType: PostType;
   metaEventType: MetaEventType;
 
-  constructor(
-    sakiko: Sakiko,
-    adapter: SakikoAdapterOnebot,
-    time: number,
-    selfId: string,
-    metaEventType: MetaEventType
-  ) {
+  constructor(sakiko: Sakiko, adapter: SakikoAdapterOnebot, time: number, selfId: string, metaEventType: MetaEventType) {
     super(sakiko);
     this.adapter = adapter;
     this.time = time;
     this.selfId = selfId;
     this.postType = PostType.META_EVENT;
     this.metaEventType = metaEventType;
+  }
+
+  getAdapter() {
+    return this.adapter;
   }
 }
 
@@ -1079,14 +786,7 @@ enum LifecycleMetaEventSubType {
 export class LifecycleMetaEvent extends MetaEvent {
   subType: LifecycleMetaEventSubType;
 
-  constructor(
-    sakiko: Sakiko,
-    adapter: SakikoAdapterOnebot,
-    time: number,
-    selfId: string,
-    metaEventType: MetaEventType,
-    subType: LifecycleMetaEventSubType
-  ) {
+  constructor(sakiko: Sakiko, adapter: SakikoAdapterOnebot, time: number, selfId: string, metaEventType: MetaEventType, subType: LifecycleMetaEventSubType) {
     super(sakiko, adapter, time, selfId, metaEventType);
     this.subType = subType;
   }
@@ -1101,15 +801,7 @@ export class HeartbeatMetaEvent extends MetaEvent {
   status: GetStatusResponse;
   interval: number;
 
-  constructor(
-    sakiko: Sakiko,
-    adapter: SakikoAdapterOnebot,
-    time: number,
-    selfId: string,
-    metaEventType: MetaEventType,
-    status: GetStatusResponse,
-    interval: number
-  ) {
+  constructor(sakiko: Sakiko, adapter: SakikoAdapterOnebot, time: number, selfId: string, metaEventType: MetaEventType, status: GetStatusResponse, interval: number) {
     super(sakiko, adapter, time, selfId, metaEventType);
     this.status = status;
     this.interval = interval;

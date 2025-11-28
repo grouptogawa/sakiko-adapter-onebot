@@ -1,6 +1,6 @@
 {
   "name": "@grouptogawa/sakiko-adapter-onebot",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
@@ -42,13 +42,14 @@
     "@types/node": "^24.10.1",
     "@types/ws": "^8.18.1",
     "prettier": "^3.6.2",
+    "tslog": "^4.10.2",
     "tsup": "^8.5.1"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
-    "@grouptogawa/sakiko": "^0.2.3",
+    "@grouptogawa/sakiko": "^0.2.7",
     "ws": "^8.18.3"
   }
 }

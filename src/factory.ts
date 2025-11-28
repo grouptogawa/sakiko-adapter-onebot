@@ -260,8 +260,8 @@ export function eventFactory(sakiko: Sakiko, adapter: SakikoAdapterOnebot, data:
   }
   // 检查对象是否属于事件结构
   if (!obj.time || !obj.self_id || !obj.post_type) {
-    // 不满足事件结构，抛出错误
-    throw `received data is not a valid Onebot v11 event: ${JSON.stringify(obj)}`;
+    // 不满足事件结构，直接退出处理流程
+    return;
   }
 
   // 通过 post_type 字段区分事件类型并调用相应的处理函数，见这个函数前面的定义
