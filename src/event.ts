@@ -38,14 +38,14 @@ enum SubTypeGroup {
 }
 
 // 匿名用户信息
-interface GroupMessageAnonymous {
+export interface GroupMessageAnonymous {
   id: number;
   name: string;
   flag: string;
 }
 
 // 发送者信息
-interface MessageSender {
+export interface MessageSender {
   userId?: number;
   nickname?: string;
   card?: string;
@@ -308,7 +308,7 @@ export class GroupDecreaseNoticeEvent extends GroupNoticeEvent {
 }
 
 // 群成员增加子类型
-enum GroupIncreaseSubType {
+export enum GroupIncreaseSubType {
   APPROVE = "approve",
   INVITE = "invite"
 }
@@ -478,10 +478,13 @@ export class LuckyKingNoticeEvent extends NotifyNoticeEvent {
   }
 }
 
-enum HonorType {
+export enum HonorType {
   TALKATIVE = "talkative",
   PERFORMER = "performer",
-  EMOTION = "emotion"
+  LEGEND = "legend",
+  STRONG_NEWBIE = "strong_newbie",
+  EMOTION = "emotion",
+  ALL = "all"
 }
 
 /**

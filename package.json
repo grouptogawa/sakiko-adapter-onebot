@@ -1,6 +1,6 @@
 {
   "name": "@grouptogawa/sakiko-adapter-onebot",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "type": "module",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
@@ -38,6 +38,7 @@
   ],
   "license": "MIT",
   "author": "machinacanis",
+  "contributors": ["MCredbear"],
   "devDependencies": {
     "@types/node": "^24.10.1",
     "@types/ws": "^8.18.1",
