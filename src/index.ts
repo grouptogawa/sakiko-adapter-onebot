@@ -1,5 +1,5 @@
 import * as model from "@/model";
-import {ANSI_BOLD, ANSI_GREEN, ANSI_MAGENTA, ANSI_RESET, Sakiko, SakikoAdapter, type IEventBus, type ILogger} from "@grouptogawa/sakiko";
+import {ANSI_BOLD, ANSI_BRIGHT_BLUE, ANSI_BRIGHT_MAGENTA, ANSI_CYAN, ANSI_GREEN, ANSI_MAGENTA, ANSI_RESET, Sakiko, SakikoAdapter, type IEventBus, type ILogger} from "@grouptogawa/sakiko";
 import {readFileSync} from "node:fs";
 import type {ClientRequest, IncomingMessage} from "node:http";
 import {createServer, Server} from "node:https";
@@ -141,13 +141,12 @@ export class SakikoAdapterOnebot extends SakikoAdapter {
     // 订阅各类事件用于输出提示信息
     if (this.config.logEvent) {
       sakiko.on(GroupMessageEvent).handle(event => {
-        this.logger?.info(`[${this.displayName}] [to ${ANSI_MAGENTA}${event.selfId}${ANSI_RESET}] [群聊 #${event.groupId}] ${event.sender.nickname}(${event.userId}): ${event.message.summary()}`);
+        this.logger?.info(
+          `[${this.displayName}] [To ${ANSI_MAGENTA}${event.selfId}${ANSI_RESET}] [Group ${ANSI_BRIGHT_BLUE}${event.groupId}${ANSI_RESET}] ${event.sender.nickname}(${event.userId}): ${event.message.summary()}`
+        );
       });
       sakiko.on(PrivateMessageEvent).handle(event => {
-        this.logger?.info(`[${this.displayName}] [to ${ANSI_MAGENTA}${event.selfId}${ANSI_RESET}] [私聊] ${event.sender.nickname}(${event.userId}): ${event.message.summary()}`);
-      });
-      sakiko.on(NoticeEvent).handle(event => {
-        this.logger?.info(`[${this.displayName}] [to ${ANSI_MAGENTA}${event.selfId}${ANSI_RESET}] [通知] ${event.noticeType}: `);
+        this.logger?.info(`[${this.displayName}] [To ${ANSI_MAGENTA}${event.selfId}${ANSI_RESET}] [Private] ${event.sender.nickname}(${event.userId}): ${event.message.summary()}`);
       });
     }
   }
@@ -160,7 +159,7 @@ export class SakikoAdapterOnebot extends SakikoAdapter {
     }
     this.initialized = true;
 
-    this.logger?.info(`[${this.displayName}] starting in ${this.config.mode} mode...`);
+    this.logger?.info(`[${this.displayName}] starting in ${ANSI_CYAN}${this.config.mode}${ANSI_RESET} mode...`);
 
     if (this.config.mode === "forward") {
       this.side = "client";
@@ -172,7 +171,13 @@ export class SakikoAdapterOnebot extends SakikoAdapter {
   }
   /** 停止适配器 */
   override stop(): void | Promise<void> {
-    throw new Error("Method not implemented.");
+    // 关闭所有 WebSocket 连接
+    this.connections.forEach(account => {
+      account.wsConn.close();
+    });
+    this.connections.clear();
+
+    this.sakiko?.info(`[${this.displayName}] ${ANSI_GREEN}${this.name}${ANSI_RESET} stopped.`);
   }
 
   /** 调用 Onebot V11 API */
@@ -214,7 +219,7 @@ export class SakikoAdapterOnebot extends SakikoAdapter {
   async _callApiWithWebSocket(account: Account, action: string, params: model.IAPIRequest): Promise<model.IAPIResponse> {
     const echo = randomUUID();
 
-    this.logger?.info(`[${this.displayName}] calling api "${action}" with id ${echo} through websocket...`);
+    this.logger?.info(`[${this.displayName}] calling api "${ANSI_CYAN}${action}${ANSI_RESET}" with id ${ANSI_MAGENTA}${echo}${ANSI_RESET} through websocket...`);
 
     // 发送 WebSocket 消息
     account.wsConn.send(new model.WebSocketMessageRequest(action, params, echo).toString());
@@ -241,7 +246,7 @@ export class SakikoAdapterOnebot extends SakikoAdapter {
             clearTimeout(timeout);
             resolve(message.data);
 
-            this.logger?.info(`[${this.displayName}] api "${action}" responsed with id ${echo}.`);
+            this.logger?.info(`[${this.displayName}] api "${ANSI_CYAN}${action}${ANSI_RESET}" responsed with id ${ANSI_MAGENTA}${echo}${ANSI_RESET}.`);
           }
           // 继续等待
         } catch (e) {
@@ -255,7 +260,7 @@ export class SakikoAdapterOnebot extends SakikoAdapter {
 
   /** 通过 HTTP POST 调用 Onebot V11 API */
   async _callApiWithHttpPost(account: Account, action: string, params: model.IAPIRequest): Promise<model.IAPIResponse> {
-    this.logger?.info(`[${this.displayName}] calling api "${action}" through http post...`);
+    this.logger?.info(`[${this.displayName}] calling api "${ANSI_CYAN}${action}${ANSI_RESET}" through http post...`);
 
     // 获取对应的上报 URL
     const httpPostUrl = account.httpPostUrl!;
@@ -282,7 +287,7 @@ export class SakikoAdapterOnebot extends SakikoAdapter {
       // 解析响应体为 JSON
       const data = await response.json();
 
-      this.logger?.info(`[${this.displayName}] api "${action}" responsed`);
+      this.logger?.info(`[${this.displayName}] api "${ANSI_CYAN}${action}${ANSI_RESET}" responsed`);
 
       return data as model.IAPIResponse;
     } catch (error: any) {
@@ -308,7 +313,7 @@ export class SakikoAdapterOnebot extends SakikoAdapter {
       // 如果这个连接已经被存储为某个账号的连接实例，那么就删除它
       if (account.wsConn === connection) {
         this.connections.delete(selfId);
-        this.logger?.info(`[${this.displayName}] Account ${selfId} disconnected.`);
+        this.logger?.info(`[${this.displayName}] Account ${ANSI_MAGENTA}${selfId}${ANSI_RESET} disconnected.`);
       }
     });
   }
@@ -339,7 +344,7 @@ export class SakikoAdapterOnebot extends SakikoAdapter {
             selfId: event.selfId,
             wsConn: connection
           });
-          this.logger?.info(`[${this.displayName}] Account ${event.selfId} connected.`);
+          this.logger?.info(`[${this.displayName}] Account ${ANSI_MAGENTA}${event.selfId}${ANSI_RESET} connected.`);
         }
       }
 
@@ -399,7 +404,7 @@ export class SakikoAdapterOnebot extends SakikoAdapter {
     }
 
     // 建立连接
-    this.logger?.info(`[${this.displayName}] listening websocket connection on ws://${this.config.host}:${this.config.port}${this.config.path}`);
+    this.logger?.info(`[${this.displayName}] listening websocket connection on ${ANSI_CYAN}ws://${this.config.host}:${this.config.port}${this.config.path}${ANSI_RESET}`);
 
     const wss = new WebSocketServer({
       host: this.config.host,
@@ -653,3 +658,5 @@ export class SakikoAdapterOnebot extends SakikoAdapter {
 export * from "./event";
 export * from "./message";
 export * from "./model";
+export * from "./utils";
+export * from "./factory";
