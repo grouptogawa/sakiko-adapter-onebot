@@ -1,4 +1,4 @@
-import {WebSocketMessageRequest, type IAPIRequest, type IAPIResponse, type SendPrivateMsgRequest, type SendPrivateMsgResponse} from "@/model";
+import * as model from "@/model";
 import {ANSI_BOLD, ANSI_GREEN, ANSI_MAGENTA, ANSI_RESET, Sakiko, SakikoAdapter, type IEventBus, type ILogger} from "@grouptogawa/sakiko";
 import {readFileSync} from "node:fs";
 import type {ClientRequest, IncomingMessage} from "node:http";
@@ -14,6 +14,7 @@ import {PrivateMessageEvent} from ".";
 import {NoticeEvent} from ".";
 import type {OnebotV11EventLike} from ".";
 import {Message, MessageSegment} from "./message";
+import type {GroupMessageAnonymous, MessageType} from "./event";
 
 /**
  * Onebot v11 适配器的配置接口定义
@@ -175,7 +176,7 @@ export class SakikoAdapterOnebot extends SakikoAdapter {
   }
 
   /** 调用 Onebot V11 API */
-  async callApi(self: SelfLike, action: string, params: IAPIRequest): Promise<IAPIResponse> {
+  async callApi(self: SelfLike, action: string, params: model.IAPIRequest): Promise<model.IAPIResponse> {
     // 根据是否启用 HTTP POST，call api 有两种模式
     // 默认情况下直接通过 WebSocket 通信调用协议实现的 API 即可，大部分的 Onebot 协议实现应该都有这个功能
     // 对于少部分的情况，可以通过正向 WebSocket 配合 HTTP POST 实现调用 API
@@ -210,16 +211,16 @@ export class SakikoAdapterOnebot extends SakikoAdapter {
   }
 
   /** 通过 WebSocket 调用 Onebot V11 API */
-  async _callApiWithWebSocket(account: Account, action: string, params: IAPIRequest): Promise<IAPIResponse> {
+  async _callApiWithWebSocket(account: Account, action: string, params: model.IAPIRequest): Promise<model.IAPIResponse> {
     const echo = randomUUID();
 
     this.logger?.info(`[${this.displayName}] calling api "${action}" with id ${echo} through websocket...`);
 
     // 发送 WebSocket 消息
-    account.wsConn.send(new WebSocketMessageRequest(action, params, echo).toString());
+    account.wsConn.send(new model.WebSocketMessageRequest(action, params, echo).toString());
 
     // 等待 WebSocket 响应
-    const response = await new Promise<IAPIResponse>((resolve, reject) => {
+    const response = await new Promise<model.IAPIResponse>((resolve, reject) => {
       // 监听特定的消息事件，当收到消息时判断是否是当前调用的 API 的响应，否则等待下一个响应直至超时
       const timeout = setTimeout(() => {
         reject(new Error(`[${this.displayName}] websocket api call timeout: ${action}`));
@@ -253,7 +254,7 @@ export class SakikoAdapterOnebot extends SakikoAdapter {
   }
 
   /** 通过 HTTP POST 调用 Onebot V11 API */
-  async _callApiWithHttpPost(account: Account, action: string, params: IAPIRequest): Promise<IAPIResponse> {
+  async _callApiWithHttpPost(account: Account, action: string, params: model.IAPIRequest): Promise<model.IAPIResponse> {
     this.logger?.info(`[${this.displayName}] calling api "${action}" through http post...`);
 
     // 获取对应的上报 URL
@@ -283,7 +284,7 @@ export class SakikoAdapterOnebot extends SakikoAdapter {
 
       this.logger?.info(`[${this.displayName}] api "${action}" responsed`);
 
-      return data as IAPIResponse;
+      return data as model.IAPIResponse;
     } catch (error: any) {
       if (error.name === "AbortError") {
         throw new Error(`[${this.displayName}] http post api call timeout: ${action}`);
@@ -459,17 +460,192 @@ export class SakikoAdapterOnebot extends SakikoAdapter {
   }
 
   /** 快捷方式，发送私聊消息 */
-  async sendPrivateMsg(self: SelfLike, userId: number | string, msg: Message | MessageSegment[] | string | number, autoEscape: boolean = false): Promise<SendPrivateMsgResponse> {
-    if (typeof msg === "string" || typeof msg === "number") {
-      msg = new Message(MessageSegment.text(String(msg)));
-    } else if (Array.isArray(msg)) {
-      msg = new Message(...msg);
-    }
-    return this.callApi(self, "send_private_msg", {
-      user_id: userId,
-      message: (msg as Message).toArray(),
-      auto_escape: autoEscape
-    } as SendPrivateMsgRequest) as unknown as SendPrivateMsgResponse;
+  async sendPrivateMsg(self: SelfLike, params: model.SendPrivateMsgRequest): Promise<model.SendPrivateMsgResponse> {
+    return this.callApi(self, "send_private_msg", params) as Promise<model.SendPrivateMsgResponse>;
+  }
+
+  /** 快捷方式，发送群消息 */
+  async sendGroupMsg(self: SelfLike, params: model.SendGroupMsgRequest): Promise<model.SendGroupMsgResponse> {
+    return this.callApi(self, "send_group_msg", params) as Promise<model.SendGroupMsgResponse>;
+  }
+
+  /** 快捷方式，发送消息 */
+  async sendMsg(self: SelfLike, params: model.SendMsgRequest): Promise<model.SendMsgResponse> {
+    return this.callApi(self, "send_msg", params) as Promise<model.SendMsgResponse>;
+  }
+
+  /** 快捷方式，撤回消息 */
+  async deleteMsg(self: SelfLike, params: model.DeleteMsgRequest): Promise<model.DeleteMsgResponse> {
+    return this.callApi(self, "delete_msg", params) as Promise<model.DeleteMsgResponse>;
+  }
+
+  /** 快捷方式，获取消息 */
+  async getMsg(self: SelfLike, params: model.GetMsgRequest): Promise<model.GetMsgResponse> {
+    return this.callApi(self, "get_msg", params) as Promise<model.GetMsgResponse>;
+  }
+
+  /** 快捷方式，获取合并转发消息 */
+  async getForwardMsg(self: SelfLike, params: model.GetForwardMsgRequest): Promise<model.GetForwardMsgResponse> {
+    return this.callApi(self, "get_forward_msg", params) as Promise<model.GetForwardMsgResponse>;
+  }
+
+  /** 快捷方式，发送好友赞 */
+  async sendLike(self: SelfLike, params: model.SendLikeRequest): Promise<{}> {
+    return this.callApi(self, "send_like", params) as Promise<{}>;
+  }
+
+  /** 快捷方式，群组踢人 */
+  async setGroupKick(self: SelfLike, params: model.SetGroupKickRequest): Promise<{}> {
+    return this.callApi(self, "set_group_kick", params) as Promise<{}>;
+  }
+
+  /** 快捷方式，群组单人禁言 */
+  async setGroupBan(self: SelfLike, params: model.SetGroupBanRequest): Promise<{}> {
+    return this.callApi(self, "set_group_ban", params) as Promise<{}>;
+  }
+
+  /** 快捷方式，群组匿名用户禁言 */
+  async setGroupAnonymousBan(self: SelfLike, params: model.SetGroupAnonymousBanRequest): Promise<{}> {
+    return this.callApi(self, "set_group_anonymous_ban", params) as Promise<{}>;
+  }
+
+  /** 快捷方式，群组全员禁言 */
+  async setGroupWholeBan(self: SelfLike, params: model.SetGroupWholeBanRequest): Promise<{}> {
+    return this.callApi(self, "set_group_whole_ban", params) as Promise<{}>;
+  }
+
+  /** 快捷方式，群组设置管理员 */
+  async setGroupAdmin(self: SelfLike, params: model.SetGroupAdminRequest): Promise<{}> {
+    return this.callApi(self, "set_group_admin", params) as Promise<{}>;
+  }
+  /** 快捷方式，群组匿名 */
+  async setGroupAnonymous(self: SelfLike, params: model.SetGroupAnonymousRequest): Promise<{}> {
+    return this.callApi(self, "set_group_anonymous", params) as Promise<{}>;
+  }
+
+  /** 快捷方式，设置群名片（群备注） */
+  async setGroupCard(self: SelfLike, params: model.SetGroupCardRequest): Promise<{}> {
+    return this.callApi(self, "set_group_card", params) as Promise<{}>;
+  }
+
+  /** 快捷方式，设置群名 */
+  async setGroupName(self: SelfLike, params: model.SetGroupNameRequest): Promise<{}> {
+    return this.callApi(self, "set_group_name", params) as Promise<{}>;
+  }
+
+  /** 快捷方式，退出群组 */
+  async setGroupLeave(self: SelfLike, params: model.SetGroupLeaveRequest): Promise<{}> {
+    return this.callApi(self, "set_group_leave", params) as Promise<{}>;
+  }
+
+  /** 快捷方式，设置群组专属头衔 */
+  async setGroupSpecialTitle(self: SelfLike, params: model.SetGroupSpecialTitleRequest): Promise<{}> {
+    return this.callApi(self, "set_group_special_title", params) as Promise<{}>;
+  }
+
+  /** 快捷方式，处理加好友请求 */
+  async setFriendAddRequest(self: SelfLike, params: model.SetFriendAddRequestRequest): Promise<{}> {
+    return this.callApi(self, "set_friend_add_request", params) as Promise<{}>;
+  }
+
+  /** 快捷方式，处理加群请求／邀请 */
+  async setGroupAddRequest(self: SelfLike, params: model.SetGroupAddRequestRequest): Promise<{}> {
+    return this.callApi(self, "set_group_add_request", params) as Promise<{}>;
+  }
+
+  /** 快捷方式，获取登录号信息 */
+  async getLoginInfo(self: SelfLike): Promise<model.GetLoginInfoResponse> {
+    return this.callApi(self, "get_login_info", {}) as Promise<model.GetLoginInfoResponse>;
+  }
+
+  /** 快捷方式，获取陌生人信息 */
+  async getStrangerInfo(self: SelfLike, params: model.GetStrangerInfoRequest): Promise<model.GetStrangerInfoResponse> {
+    return this.callApi(self, "get_stranger_info", params) as Promise<model.GetStrangerInfoResponse>;
+  }
+
+  /** 快捷方式，获取好友列表 */
+  async getFriendList(self: SelfLike): Promise<model.GetFriendListResponse> {
+    return this.callApi(self, "get_friend_list", {}) as Promise<model.GetFriendListResponse>;
+  }
+
+  /** 快捷方式，获取群信息 */
+  async getGroupInfo(self: SelfLike, params: model.GetGroupInfoRequest): Promise<model.GetGroupInfoResponse> {
+    return this.callApi(self, "get_group_info", params) as Promise<model.GetGroupInfoResponse>;
+  }
+
+  /** 快捷方式，获取群列表 */
+  async getGroupList(self: SelfLike): Promise<model.GetGroupListResponse> {
+    return this.callApi(self, "get_group_list", {}) as Promise<model.GetGroupListResponse>;
+  }
+
+  /** 快捷方式，获取群成员信息 */
+  async getGroupMemberInfo(self: SelfLike, params: model.GetGroupMemberInfoRequest): Promise<model.GetGroupMemberInfoResponse> {
+    return this.callApi(self, "get_group_member_info", params) as Promise<model.GetGroupMemberInfoResponse>;
+  }
+
+  /** 快捷方式，获取群成员列表 */
+  async getGroupMemberList(self: SelfLike, params: model.GetGroupMemberListRequest): Promise<model.GetGroupMemberListResponse> {
+    return this.callApi(self, "get_group_member_list", params) as Promise<model.GetGroupMemberListResponse>;
+  }
+
+  /** 快捷方式，获取群荣誉信息 */
+  async getGroupHonorInfo(self: SelfLike, params: model.GetGroupHonorInfoRequest): Promise<model.GetGroupHonorInfoResponse> {
+    return this.callApi(self, "get_group_honor_info", params) as Promise<model.GetGroupHonorInfoResponse>;
+  }
+
+  /** 快捷方式，获取 Cookies */
+  async getCookies(self: SelfLike, params: model.GetCookiesRequest): Promise<model.GetCookiesResponse> {
+    return this.callApi(self, "get_cookies", params) as Promise<model.GetCookiesResponse>;
+  }
+
+  /** 快捷方式，获取 CSRF Token */
+  async getCsrfToken(self: SelfLike): Promise<model.GetCsrfTokenResponse> {
+    return this.callApi(self, "get_csrf_token", {}) as Promise<model.GetCsrfTokenResponse>;
+  }
+
+  /** 快捷方式，获取 QQ 相关接口凭证 */
+  async getCredentials(self: SelfLike, params: model.GetCredentialsRequest): Promise<model.GetCredentialsResponse> {
+    return this.callApi(self, "get_credentials", params) as Promise<model.GetCredentialsResponse>;
+  }
+
+  /** 快捷方式，获取语音 */
+  async getRecord(self: SelfLike, params: model.GetRecordRequest): Promise<model.GetRecordResponse> {
+    return this.callApi(self, "get_record", params) as Promise<model.GetRecordResponse>;
+  }
+
+  /** 快捷方式，获取图片 */
+  async getImage(self: SelfLike, params: model.GetImageRequest): Promise<model.GetImageResponse> {
+    return this.callApi(self, "get_image", params) as Promise<model.GetImageResponse>;
+  }
+
+  /** 快捷方式，检查是否可以发送图片 */
+  async canSendImage(self: SelfLike): Promise<model.CanSendImageResponse> {
+    return this.callApi(self, "can_send_image", {}) as Promise<model.CanSendImageResponse>;
+  }
+
+  /** 快捷方式，检查是否可以发送语音 */
+  async canSendRecord(self: SelfLike): Promise<model.CanSendRecordResponse> {
+    return this.callApi(self, "can_send_record", {}) as Promise<model.CanSendRecordResponse>;
+  }
+
+  /** 快捷方式，获取状态 */
+  async getStatus(self: SelfLike): Promise<model.GetStatusResponse> {
+    return this.callApi(self, "get_status", {}) as Promise<model.GetStatusResponse>;
+  }
+
+  /** 快捷方式，获取版本信息 */
+  async getVersionInfo(self: SelfLike): Promise<model.GetStatusInfoResponse> {
+    return this.callApi(self, "get_version_info", {}) as Promise<model.GetStatusInfoResponse>;
+  }
+
+  /** 快捷方式，重启 OneBot 实现 */
+  async setRestart(self: SelfLike): Promise<model.SetRestartResponse> {
+    return this.callApi(self, "set_restart", {}) as Promise<model.SetRestartResponse>;
+  }
+
+  /** 快捷方式，清理缓存 */
+  async cleanCache(self: SelfLike): Promise<model.CleanCacheResponse> {
+    return this.callApi(self, "clean_cache", {}) as Promise<model.CleanCacheResponse>;
   }
 }
 
