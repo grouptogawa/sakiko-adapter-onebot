@@ -125,7 +125,7 @@ export interface SetGroupKickRequest extends IAPIRequest {
 /**
  * Onebot v11 `set_group_ban` 群组单人禁言
  */
-export interface SetGroupBanResponse extends IAPIResponse {
+export interface SetGroupBanRequest extends IAPIRequest {
   group_id: number;
   user_id: number;
   duration: number;
