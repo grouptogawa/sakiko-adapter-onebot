@@ -173,6 +173,10 @@ export class Message extends Array<MessageSegment> {
     });
     return msg;
   }
+
+  toArray(): Array<SegmentLike> {
+    return this.map(segment => segment.toObj());
+  }
 }
 
 /**

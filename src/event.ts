@@ -814,3 +814,8 @@ export class HeartbeatMetaEvent extends MetaEvent {
     this.interval = interval;
   }
 }
+
+/**
+ * Onebot v11 全部事件类型的联合定义
+ */
+export type OnebotV11EventLike = MessageEvent<any> | NoticeEvent | RequestEvent | MetaEvent;

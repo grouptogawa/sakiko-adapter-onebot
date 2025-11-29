@@ -1,4 +1,4 @@
-import {WebSocketMessageRequest, type IAPIRequest, type IAPIResponse} from "@/model";
+import {WebSocketMessageRequest, type IAPIRequest, type IAPIResponse, type SendPrivateMsgRequest, type SendPrivateMsgResponse} from "@/model";
 import {ANSI_BOLD, ANSI_GREEN, ANSI_MAGENTA, ANSI_RESET, Sakiko, SakikoAdapter, type IEventBus, type ILogger} from "@grouptogawa/sakiko";
 import {readFileSync} from "node:fs";
 import type {ClientRequest, IncomingMessage} from "node:http";
@@ -12,6 +12,8 @@ import {LifecycleMetaEvent} from ".";
 import {GroupMessageEvent} from ".";
 import {PrivateMessageEvent} from ".";
 import {NoticeEvent} from ".";
+import type {OnebotV11EventLike} from ".";
+import {Message, MessageSegment} from "./message";
 
 /**
  * Onebot v11 适配器的配置接口定义
@@ -48,6 +50,9 @@ interface Account {
   wsConn: WebSocket;
   httpPostUrl?: string;
 }
+
+// 定义 SelfLike 类型，用于表示可以是 selfId 字符串、事件对象或事件对象的 selfId 属性
+type SelfLike = string | number | OnebotV11EventLike;
 
 /**
  * Sakiko 框架的 Onebot v11 适配器
@@ -170,7 +175,7 @@ export class SakikoAdapterOnebot extends SakikoAdapter {
   }
 
   /** 调用 Onebot V11 API */
-  callApi(selfId: string, action: string, params: IAPIRequest): IAPIResponse {
+  async callApi(self: SelfLike, action: string, params: IAPIRequest): Promise<IAPIResponse> {
     // 根据是否启用 HTTP POST，call api 有两种模式
     // 默认情况下直接通过 WebSocket 通信调用协议实现的 API 即可，大部分的 Onebot 协议实现应该都有这个功能
     // 对于少部分的情况，可以通过正向 WebSocket 配合 HTTP POST 实现调用 API
@@ -178,6 +183,20 @@ export class SakikoAdapterOnebot extends SakikoAdapter {
     // 总之我懒得写完 Onebot v11 的所有连接模式的支持，如果有别的想法欢迎 PR
 
     // 获取对应账号的连接对象
+    let selfId: string;
+    switch (typeof self) {
+      case "string":
+        selfId = self;
+        break;
+      case "number":
+        selfId = self.toString();
+        break;
+      case "object":
+        selfId = self.selfId;
+        break;
+      default:
+        throw new Error(`[${this.displayName}] invalid selfId type: ${typeof self}`);
+    }
     const account = this.connections.get(selfId);
     if (!account) {
       throw new Error(`[${this.displayName}] no connection found for selfId ${selfId}`);
@@ -437,6 +456,20 @@ export class SakikoAdapterOnebot extends SakikoAdapter {
 
   getConnections() {
     return this.connections;
+  }
+
+  /** 快捷方式，发送私聊消息 */
+  async sendPrivateMsg(self: SelfLike, userId: number | string, msg: Message | MessageSegment[] | string | number, autoEscape: boolean = false): Promise<SendPrivateMsgResponse> {
+    if (typeof msg === "string" || typeof msg === "number") {
+      msg = new Message(MessageSegment.text(String(msg)));
+    } else if (Array.isArray(msg)) {
+      msg = new Message(...msg);
+    }
+    return this.callApi(self, "send_private_msg", {
+      user_id: userId,
+      message: (msg as Message).toArray(),
+      auto_escape: autoEscape
+    } as SendPrivateMsgRequest) as unknown as SendPrivateMsgResponse;
   }
 }
 
