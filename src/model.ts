@@ -55,10 +55,12 @@ export interface SendGroupMsgResponse extends IAPIResponse {
 }
 
 /**
- * Onebot v11 `send_msg` 发送群消息
+ * Onebot v11 `send_msg` 发送消息
  */
 export interface SendMsgRequest extends IAPIRequest {
-  group_id: number;
+  message_type: MessageType;
+  user_id?: number;
+  group_id?: number;
   message: Message;
   auto_escape?: boolean;
 }
