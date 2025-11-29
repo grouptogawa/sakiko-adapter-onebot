@@ -1,5 +1,5 @@
 import * as model from "@/model";
-import {ANSI_BOLD, ANSI_BRIGHT_BLUE, ANSI_BRIGHT_MAGENTA, ANSI_CYAN, ANSI_GREEN, ANSI_MAGENTA, ANSI_RESET, Sakiko, SakikoAdapter, type IEventBus, type ILogger} from "@grouptogawa/sakiko";
+import {ANSI_BOLD, ANSI_BRIGHT_BLUE, ANSI_BRIGHT_MAGENTA, ANSI_CYAN, ANSI_GREEN, ANSI_MAGENTA, ANSI_RESET, Sakiko, type ISakikoAdapter, type IEventBus, type ILogger} from "@grouptogawa/sakiko";
 import {readFileSync} from "node:fs";
 import type {ClientRequest, IncomingMessage} from "node:http";
 import {createServer, Server} from "node:https";
@@ -58,17 +58,17 @@ type SelfLike = string | number | OnebotV11EventLike;
 /**
  * Sakiko 框架的 Onebot v11 适配器
  */
-export class SakikoAdapterOnebot extends SakikoAdapter {
+export class SakikoAdapterOnebot implements ISakikoAdapter {
   /** 适配器名称 */
-  override readonly name = "sakiko-adapter-onebot";
+  readonly name = "sakiko-adapter-onebot";
   /** 适配器显示名称 */
   readonly displayName = ANSI_GREEN + ANSI_BOLD + "Onebot V11" + ANSI_RESET;
   /** 适配器版本 */
-  override readonly version = "0.1.0";
+  readonly version = "0.1.0";
   /** 协议名称 */
-  override readonly protocolName = "ob11";
+  readonly protocolName = "ob11";
   /** 平台名称 */
-  override readonly platformName = "cross-platform";
+  readonly platformName = "cross-platform";
 
   /** 适配器配置 */
   private config: SakikoAdapterOnebotConfig = {
@@ -97,14 +97,13 @@ export class SakikoAdapterOnebot extends SakikoAdapter {
   private wss: WebSocketServer | null = null;
 
   constructor(config?: SakikoAdapterOnebotConfig) {
-    super();
     if (config) {
       this.config = {...this.config, ...config};
     }
   }
 
   /** 初始化适配器 */
-  override init(sakiko: Sakiko): void {
+  init(sakiko: Sakiko): void {
     this.sakiko = sakiko;
     this.logger = sakiko.getLogger();
     this.bus = sakiko.getBus();
@@ -152,14 +151,14 @@ export class SakikoAdapterOnebot extends SakikoAdapter {
   }
 
   /** 启动适配器 */
-  override start(): void | Promise<void> {
+  start(): void | Promise<void> {
     if (this.initialized) {
       this.logger?.warn(`[${this.displayName}] this adapter already started.`);
       return;
     }
     this.initialized = true;
 
-    this.logger?.info(`[${this.displayName}] starting in ${ANSI_CYAN}${this.config.mode}${ANSI_RESET} mode...`);
+    this.logger?.info(`[${this.displayName}] starting in ${this.config.mode} mode...`);
 
     if (this.config.mode === "forward") {
       this.side = "client";
@@ -170,7 +169,7 @@ export class SakikoAdapterOnebot extends SakikoAdapter {
     }
   }
   /** 停止适配器 */
-  override stop(): void | Promise<void> {
+  stop(): void | Promise<void> {
     // 关闭所有 WebSocket 连接
     this.connections.forEach(account => {
       account.wsConn.close();
@@ -179,6 +178,9 @@ export class SakikoAdapterOnebot extends SakikoAdapter {
 
     this.sakiko?.info(`[${this.displayName}] ${ANSI_GREEN}${this.name}${ANSI_RESET} stopped.`);
   }
+
+  /** 适配器 UUID */
+  uuid: string = randomUUID();
 
   /** 调用 Onebot V11 API */
   async callApi(self: SelfLike, action: string, params: model.IAPIRequest): Promise<model.IAPIResponse> {

@@ -118,7 +118,7 @@ export class MessageEvent<TSubType extends SubTypePrivate | SubTypeGroup> extend
     return false;
   }
 
-  getAdapter(): SakikoAdapterOnebot {
+  getBot(): SakikoAdapterOnebot {
     return this.adapter;
   }
 }
@@ -225,7 +225,7 @@ export class NoticeEvent extends SakikoNoticeEvent {
     this.noticeType = noticeType;
   }
 
-  getAdapter(): SakikoAdapterOnebot {
+  getBot(): SakikoAdapterOnebot {
     return this.adapter;
   }
 }
@@ -698,7 +698,7 @@ export class RequestEvent extends SakikoBaseEvent {
     this.comment = comment;
   }
 
-  getAdapter() {
+  getBot() {
     return this.adapter;
   }
 }
@@ -774,7 +774,7 @@ export class MetaEvent extends SakikoMetaEvent {
     this.metaEventType = metaEventType;
   }
 
-  getAdapter() {
+  getBot() {
     return this.adapter;
   }
 }
