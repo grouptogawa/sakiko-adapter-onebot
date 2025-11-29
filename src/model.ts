@@ -247,8 +247,7 @@ export interface GetStrangerInfoResponse extends IAPIResponse {
  * Onebot v11 `get_friend_list` 获取好友列表
  */
 export interface GetFriendListResponse
-  extends
-    IAPIResponse,
+  extends IAPIResponse,
     Array<{
       user_id: number;
       nickname: string;
@@ -274,8 +273,7 @@ export interface GetGroupInfoResponse extends IAPIResponse {
  * Onebot v11 `get_group_list` 获取群列表
  */
 export interface GetGroupListResponse
-  extends
-    IAPIResponse,
+  extends IAPIResponse,
     Array<{
       group_id: number;
       group_name: string;
@@ -318,8 +316,7 @@ export interface GetGroupMemberListRequest extends IAPIRequest {
 }
 
 export interface GetGroupMemberListResponse
-  extends
-    IAPIResponse,
+  extends IAPIResponse,
     Array<{
       group_id: number;
       user_id: number;
@@ -471,3 +468,15 @@ export interface GetStatusInfoResponse extends IAPIResponse {
   protocol_version: string;
   [key: string]: any;
 }
+
+/**
+ * Onebot v11 `set_restart` 重启 OneBot 实现
+ */
+export interface SetRestartResponse extends IAPIResponse {
+  delay: number;
+}
+
+/**
+ * Onebot v11 `clean_cache` 清理缓存
+ */
+export interface CleanCacheResponse extends IAPIResponse {}
