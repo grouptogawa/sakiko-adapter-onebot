@@ -49,7 +49,7 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "@grouptogawa/sakiko": "^0.2.7",
+    "@grouptogawa/sakiko": "^0.2.8",
     "ws": "^8.18.3"
   }
 }

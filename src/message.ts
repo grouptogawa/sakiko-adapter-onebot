@@ -16,7 +16,7 @@ function convertCQ(type: SegmentType, data: object): string {
 }
 
 // 消息段类型枚举
-enum SegmentType {
+export enum SegmentType {
   TEXT = "text",
   FACE = "face",
   MFACE = "mface",
@@ -361,7 +361,7 @@ export class MFace extends MessageSegment {
     this.data = {emojiId, emojiPackageId, key, summary};
   }
   override summary(): string {
-    return this.data.summary ?? `[商城表情#${this.data.emojiId}]`;
+    return `[商城表情#${this.data.summary}]`;
   }
   override cq(): string {
     return convertCQ(SegmentType.MFACE, this.data);
@@ -512,7 +512,7 @@ export class Image extends MessageSegment {
   }
 
   override summary(): string {
-    return this.data.summary ?? `[图片#${this.data.file}]`;
+    return `[图片#${this.data.file}]`;
   }
 
   override cq(): string {
@@ -553,7 +553,7 @@ export class Record extends MessageSegment {
   }
 
   override summary(): string {
-    return this.data.path ?? `[语音#${this.data.file}]`;
+    return `[语音#${this.data.file}]`;
   }
 
   override cq(): string {
@@ -591,7 +591,7 @@ export class Video extends MessageSegment {
   }
 
   override summary(): string {
-    return this.data.url ?? `[视频#${this.data.file}]`;
+    return `[视频#${this.data.file}]`;
   }
 
   override cq(): string {
@@ -628,7 +628,7 @@ export class File extends MessageSegment {
   }
 
   override summary(): string {
-    return this.data.fileId ?? `[文件#${this.data.file}]`;
+    return `[文件#${this.data.file}]`;
   }
 
   override cq(): string {

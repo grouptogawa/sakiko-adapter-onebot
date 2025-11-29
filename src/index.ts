@@ -1,5 +1,5 @@
 import {WebSocketMessageRequest, type IAPIRequest, type IAPIResponse} from "@/model";
-import {ANSI_BOLD, ANSI_GREEN, ANSI_RESET, Sakiko, SakikoAdapter, type IEventBus, type ILogger} from "@grouptogawa/sakiko";
+import {ANSI_BOLD, ANSI_GREEN, ANSI_MAGENTA, ANSI_RESET, Sakiko, SakikoAdapter, type IEventBus, type ILogger} from "@grouptogawa/sakiko";
 import {readFileSync} from "node:fs";
 import type {ClientRequest, IncomingMessage} from "node:http";
 import {createServer, Server} from "node:https";
@@ -9,6 +9,9 @@ import {eventFactory} from "./factory";
 import {expectedAccessToken} from "./utils";
 import {randomUUID} from "node:crypto";
 import {LifecycleMetaEvent} from ".";
+import {GroupMessageEvent} from ".";
+import {PrivateMessageEvent} from ".";
+import {NoticeEvent} from ".";
 
 /**
  * Onebot v11 适配器的配置接口定义
@@ -36,6 +39,8 @@ interface SakikoAdapterOnebotConfig {
   httpPostUrls?: string[];
   /** API 调用超时时间，单位毫秒 */
   apiTimeout?: number;
+  /** 是否输出事件内容 */
+  logEvent?: boolean;
 }
 
 interface Account {
@@ -51,7 +56,7 @@ export class SakikoAdapterOnebot extends SakikoAdapter {
   /** 适配器名称 */
   override readonly name = "sakiko-adapter-onebot";
   /** 适配器显示名称 */
-  readonly displayName = ANSI_GREEN + ANSI_BOLD + "sakiko-adapter-onebot" + ANSI_RESET;
+  readonly displayName = ANSI_GREEN + ANSI_BOLD + "Onebot V11" + ANSI_RESET;
   /** 适配器版本 */
   override readonly version = "0.1.0";
   /** 协议名称 */
@@ -65,7 +70,8 @@ export class SakikoAdapterOnebot extends SakikoAdapter {
     host: "127.0.0.1",
     port: 8080,
     path: "/onebot/v11/ws",
-    apiTimeout: 30000
+    apiTimeout: 30000,
+    logEvent: true
   };
 
   /** Sakiko 实例引用 */
@@ -124,6 +130,19 @@ export class SakikoAdapterOnebot extends SakikoAdapter {
       if ((this.config.certPath && !this.config.keyPath) || (!this.config.certPath && this.config.keyPath)) {
         throw new Error(`[${this.displayName}] reverse mode with ssl server requires both cert path and key path to be set.`);
       }
+    }
+
+    // 订阅各类事件用于输出提示信息
+    if (this.config.logEvent) {
+      sakiko.on(GroupMessageEvent).handle(event => {
+        this.logger?.info(`[${this.displayName}] [to ${ANSI_MAGENTA}${event.selfId}${ANSI_RESET}] [群聊 #${event.groupId}] ${event.sender.nickname}(${event.userId}): ${event.message.summary()}`);
+      });
+      sakiko.on(PrivateMessageEvent).handle(event => {
+        this.logger?.info(`[${this.displayName}] [to ${ANSI_MAGENTA}${event.selfId}${ANSI_RESET}] [私聊] ${event.sender.nickname}(${event.userId}): ${event.message.summary()}`);
+      });
+      sakiko.on(NoticeEvent).handle(event => {
+        this.logger?.info(`[${this.displayName}] [to ${ANSI_MAGENTA}${event.selfId}${ANSI_RESET}] [通知] ${event.noticeType}: `);
+      });
     }
   }
 

@@ -1,6 +1,6 @@
 import type {GetStatusResponse} from "@/model";
 import {Sakiko, SakikoBaseEvent, SakikoMessageEvent, SakikoMetaEvent, SakikoNoticeEvent} from "@grouptogawa/sakiko";
-import type {Message, SakikoAdapterOnebot} from ".";
+import {SegmentType, Text, type Message, type SakikoAdapterOnebot} from ".";
 
 /**
  * 这个文件里是各种 Onebot v11 事件的定义
@@ -107,7 +107,11 @@ export class MessageEvent<TSubType extends SubTypePrivate | SubTypeGroup> extend
   }
 
   override getPlainText(): string {
-    return this.rawMessage;
+    // 去掉所有text之外的元素
+    return this.message
+      .filter(item => item.type === SegmentType.TEXT)
+      .map(item => (item as Text).data.text)
+      .join("");
   }
 
   override toMe(): boolean {
