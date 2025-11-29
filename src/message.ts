@@ -1,4 +1,4 @@
-import { escapeCQParam } from "./utils";
+import {escapeCQParam} from "./utils";
 
 function convertCQ(type: SegmentType, data: object): string {
   // 将传入的对象展开转换成字符串序列
@@ -38,7 +38,8 @@ enum SegmentType {
   NODE = "node",
   XML = "xml",
   JSON = "json",
-  UNSUPPORTED = "unsupported"
+  UNSUPPORTED = "unsupported",
+  FILE = "file"
 }
 
 /**
@@ -50,6 +51,7 @@ export abstract class MessageSegment {
 
   abstract summary(): string;
   abstract cq(): string;
+  abstract toObj(): SegmentLike;
 
   static text(text: string): Text {
     return new Text(text);
@@ -86,16 +88,16 @@ export class Message extends Array<MessageSegment> {
   }
 
   summary(): string {
-    return this.map((segment) => segment.summary()).join(" ");
+    return this.map(segment => segment.summary()).join(" ");
   }
 
   cq(): string {
-    return this.map((segment) => segment.cq()).join("");
+    return this.map(segment => segment.cq()).join("");
   }
 
   static fromArray(input: SegmentLike[]): Message {
     let msg = new Message();
-    input.forEach((seg) => {
+    input.forEach(seg => {
       switch (seg.type) {
         case SegmentType.TEXT:
           msg.push(Text.fromObj(seg));
@@ -124,7 +126,46 @@ export class Message extends Array<MessageSegment> {
         case SegmentType.IMAGE:
           msg.push(Image.fromObj(seg));
           break;
-        // TODO: 添加更多消息段类型的解析
+        case SegmentType.RECORD:
+          msg.push(Record.fromObj(seg));
+          break;
+        case SegmentType.VIDEO:
+          msg.push(Video.fromObj(seg));
+          break;
+        case SegmentType.ANONYMOUS:
+          msg.push(Anonymous.fromObj(seg));
+          break;
+        case SegmentType.SHARE:
+          msg.push(Share.fromObj(seg));
+          break;
+        case SegmentType.CONTACT:
+          msg.push(Contact.fromObj(seg));
+          break;
+        case SegmentType.LOCATION:
+          msg.push(Location.fromObj(seg));
+          break;
+        case SegmentType.MUSIC:
+          msg.push(Music.fromObj(seg));
+          break;
+        case SegmentType.FORWARD:
+          msg.push(Forward.fromObj(seg));
+          break;
+        case SegmentType.NODE:
+          msg.push(Node.fromObj(seg));
+          break;
+        case SegmentType.XML:
+          msg.push(Xml.fromObj(seg));
+          break;
+        case SegmentType.JSON:
+          msg.push(Json.fromObj(seg));
+          break;
+        case SegmentType.FILE:
+          msg.push(File.fromObj(seg));
+          break;
+        case SegmentType.SHAKE:
+          msg.push(Shake.fromObj(seg));
+          break;
+
         default:
           msg.push(Unsupported.fromObj(seg));
           break;
@@ -160,6 +201,13 @@ export class Unsupported extends MessageSegment {
   static fromObj(obj: SegmentLike): Unsupported {
     return new Unsupported(obj.type, obj.data);
   }
+
+  toObj(): SegmentLike {
+    return {
+      type: this.originalType,
+      data: this.data
+    };
+  }
 }
 
 /**
@@ -168,11 +216,11 @@ export class Unsupported extends MessageSegment {
  */
 export class Text extends MessageSegment {
   override type = SegmentType.TEXT;
-  override data: { text: string };
+  override data: {text: string};
 
   constructor(text: string) {
     super();
-    this.data = { text };
+    this.data = {text};
   }
 
   override summary(): string {
@@ -185,6 +233,13 @@ export class Text extends MessageSegment {
   static fromObj(obj: SegmentLike): Text {
     return new Text(String(obj.data.text));
   }
+
+  toObj(): SegmentLike {
+    return {
+      type: this.type,
+      data: this.data
+    };
+  }
 }
 
 /**
@@ -193,10 +248,10 @@ export class Text extends MessageSegment {
  */
 export class At extends MessageSegment {
   override type = SegmentType.AT;
-  override data: { qq: string | "all" };
+  override data: {qq: string | "all"};
   constructor(qq: string | "all") {
     super();
-    this.data = { qq };
+    this.data = {qq};
   }
 
   override summary(): string {
@@ -210,6 +265,13 @@ export class At extends MessageSegment {
   static fromObj(obj: SegmentLike): At {
     return new At(String(obj.data.qq));
   }
+
+  toObj(): SegmentLike {
+    return {
+      type: this.type,
+      data: this.data
+    };
+  }
 }
 
 /**
@@ -218,11 +280,11 @@ export class At extends MessageSegment {
  */
 export class Reply extends MessageSegment {
   override type = SegmentType.REPLY;
-  override data: { id: string };
+  override data: {id: string};
 
   constructor(id: string) {
     super();
-    this.data = { id };
+    this.data = {id};
   }
 
   override summary(): string {
@@ -235,6 +297,13 @@ export class Reply extends MessageSegment {
 
   static fromObj(obj: SegmentLike): Reply {
     return new Reply(String(obj.data.id));
+  }
+
+  toObj(): SegmentLike {
+    return {
+      type: this.type,
+      data: this.data
+    };
   }
 }
 
@@ -251,7 +320,7 @@ export class Face extends MessageSegment {
   };
   constructor(id: number, raw?: any, resultId?: string, chainCount?: number) {
     super();
-    this.data = { id, raw, resultId, chainCount };
+    this.data = {id, raw, resultId, chainCount};
   }
   override summary(): string {
     return `[表情#${this.data.id}]`;
@@ -262,12 +331,14 @@ export class Face extends MessageSegment {
   }
 
   static fromObj(obj: SegmentLike): Face {
-    return new Face(
-      Number(obj.data.id),
-      obj.data.raw,
-      obj.data.resultId,
-      obj.data.chainCount
-    );
+    return new Face(Number(obj.data.id), obj.data.raw, obj.data.result_id, obj.data.chain_count);
+  }
+
+  toObj(): SegmentLike {
+    return {
+      type: this.type,
+      data: this.data
+    };
   }
 }
 
@@ -285,14 +356,9 @@ export class MFace extends MessageSegment {
     key?: string;
     summary?: string;
   };
-  constructor(
-    emojiId: string,
-    emojiPackageId: string,
-    key?: string,
-    summary?: string
-  ) {
+  constructor(emojiId: string, emojiPackageId: string, key?: string, summary?: string) {
     super();
-    this.data = { emojiId, emojiPackageId, key, summary };
+    this.data = {emojiId, emojiPackageId, key, summary};
   }
   override summary(): string {
     return this.data.summary ?? `[商城表情#${this.data.emojiId}]`;
@@ -302,12 +368,14 @@ export class MFace extends MessageSegment {
   }
 
   static fromObj(obj: SegmentLike): MFace {
-    return new MFace(
-      String(obj.data.emojiId),
-      String(obj.data.emojiPackageId),
-      obj.data.key,
-      obj.data.summary
-    );
+    return new MFace(String(obj.data.emoji_id), String(obj.data.emoji_package_id), obj.data.key, obj.data.summary);
+  }
+
+  toObj(): SegmentLike {
+    return {
+      type: this.type,
+      data: this.data
+    };
   }
 }
 
@@ -317,11 +385,11 @@ export class MFace extends MessageSegment {
  */
 export class Dice extends MessageSegment {
   override type = SegmentType.DICE;
-  override data: { result?: string };
+  override data: {result?: string};
 
   constructor(result?: string) {
     super();
-    this.data = { result };
+    this.data = {result};
   }
   override summary(): string {
     return `[骰子#${this.data.result}]`;
@@ -333,6 +401,13 @@ export class Dice extends MessageSegment {
 
   static fromObj(obj: SegmentLike): Dice {
     return new Dice(String(obj.data.result));
+  }
+
+  toObj(): SegmentLike {
+    return {
+      type: this.type,
+      data: this.data
+    };
   }
 }
 
@@ -348,10 +423,10 @@ export class Dice extends MessageSegment {
  */
 export class RPS extends MessageSegment {
   override type = SegmentType.RPS;
-  override data: { result?: string };
+  override data: {result?: string};
   constructor(result?: string) {
     super();
-    this.data = { result };
+    this.data = {result};
   }
   override summary(): string {
     return `[猜拳#${this.data.result}]`;
@@ -364,6 +439,13 @@ export class RPS extends MessageSegment {
   static fromObj(obj: SegmentLike): RPS {
     return new RPS(String(obj.data.result));
   }
+
+  toObj(): SegmentLike {
+    return {
+      type: this.type,
+      data: this.data
+    };
+  }
 }
 
 /**
@@ -372,11 +454,11 @@ export class RPS extends MessageSegment {
  */
 export class Poke extends MessageSegment {
   override type = SegmentType.POKE;
-  override data: { type: string; id: string };
+  override data: {type: string; id: string};
 
   constructor(type: string, id: string) {
     super();
-    this.data = { type, id };
+    this.data = {type, id};
   }
   override summary(): string {
     return `[戳一戳#${this.data.type}]`;
@@ -387,6 +469,13 @@ export class Poke extends MessageSegment {
 
   static fromObj(obj: SegmentLike): Poke {
     return new Poke(String(obj.data.type), String(obj.data.id));
+  }
+
+  toObj(): SegmentLike {
+    return {
+      type: this.type,
+      data: this.data
+    };
   }
 }
 
@@ -408,16 +497,7 @@ export class Image extends MessageSegment {
     emojiPackageId?: string;
   };
 
-  constructor(
-    file: string,
-    url?: string,
-    summary?: string,
-    subType?: string,
-    fileSize?: number,
-    key?: string,
-    emojiId?: string,
-    emojiPackageId?: string
-  ) {
+  constructor(file: string, url?: string, summary?: string, subType?: string, fileSize?: number, key?: string, emojiId?: string, emojiPackageId?: string) {
     super();
     this.data = {
       file,
@@ -440,21 +520,493 @@ export class Image extends MessageSegment {
   }
 
   isMface(): boolean {
-    return (
-      this.data.emojiId !== undefined && this.data.emojiPackageId !== undefined
-    );
+    return this.data.emojiId !== undefined && this.data.emojiPackageId !== undefined;
   }
 
   static fromObj(obj: SegmentLike): Image {
-    return new Image(
-      String(obj.data.file),
-      String(obj.data.url),
-      obj.data.summary,
-      obj.data.subType,
-      obj.data.fileSize,
-      obj.data.key,
-      obj.data.emojiId,
-      obj.data.emojiPackageId
-    );
+    return new Image(String(obj.data.file), String(obj.data.url), obj.data.summary, obj.data.sub_type, obj.data.fileSize, obj.data.key, obj.data.emoji_id, obj.data.emoji_package_id);
+  }
+
+  toObj(): SegmentLike {
+    return {
+      type: this.type,
+      data: this.data
+    };
+  }
+}
+
+/**
+ * Onebot v11 语音消息段
+ * @extends MessageSegment 消息段抽象基类
+ */
+export class Record extends MessageSegment {
+  override type = SegmentType.RECORD;
+  override data: {
+    file: string;
+    fileSize?: number;
+    path?: string;
+  };
+
+  constructor(file: string, fileSize?: number, path?: string) {
+    super();
+    this.data = {file, fileSize, path};
+  }
+
+  override summary(): string {
+    return this.data.path ?? `[语音#${this.data.file}]`;
+  }
+
+  override cq(): string {
+    return convertCQ(SegmentType.RECORD, this.data);
+  }
+
+  static fromObj(obj: SegmentLike): Record {
+    return new Record(String(obj.data.file), obj.data.file_size, obj.data.path);
+  }
+
+  toObj(): SegmentLike {
+    return {
+      type: this.type,
+      data: this.data
+    };
+  }
+}
+
+/**
+ * Onebot v11 视频消息段
+ * @extends MessageSegment 消息段抽象基类
+ */
+export class Video extends MessageSegment {
+  override type = SegmentType.VIDEO;
+  override data: {
+    file: string;
+    url?: string;
+    fileSize?: number;
+    thumb?: string;
+  };
+
+  constructor(file: string, url?: string, fileSize?: number, thumb?: string) {
+    super();
+    this.data = {file, url, fileSize, thumb};
+  }
+
+  override summary(): string {
+    return this.data.url ?? `[视频#${this.data.file}]`;
+  }
+
+  override cq(): string {
+    return convertCQ(SegmentType.VIDEO, this.data);
+  }
+
+  static fromObj(obj: SegmentLike): Video {
+    return new Video(String(obj.data.file), String(obj.data.url), obj.data.file_size, obj.data.thumb);
+  }
+
+  toObj(): SegmentLike {
+    return {
+      type: this.type,
+      data: this.data
+    };
+  }
+}
+
+/**
+ * Onebot v11 文件消息段
+ * @extends MessageSegment 消息段抽象基类
+ */
+export class File extends MessageSegment {
+  override type = SegmentType.FILE;
+  override data: {
+    file: string;
+    fileId?: string;
+    fileSize?: number;
+  };
+
+  constructor(file: string, fileId?: string, fileSize?: number) {
+    super();
+    this.data = {file, fileId, fileSize};
+  }
+
+  override summary(): string {
+    return this.data.fileId ?? `[文件#${this.data.file}]`;
+  }
+
+  override cq(): string {
+    return convertCQ(SegmentType.FILE, this.data);
+  }
+
+  static fromObj(obj: SegmentLike): File {
+    return new File(String(obj.data.file), String(obj.data.file_id), obj.data.file_size);
+  }
+
+  toObj(): SegmentLike {
+    return {
+      type: this.type,
+      data: this.data
+    };
+  }
+}
+
+/**
+ * Onebot v11 JSON 消息段
+ * @extends MessageSegment 消息段抽象基类
+ */
+export class Json extends MessageSegment {
+  override type = SegmentType.JSON;
+  override data: {
+    data: string | object;
+  };
+
+  constructor(data: string | object) {
+    super();
+    this.data = {data};
+  }
+
+  override summary(): string {
+    return `[JSON#${this.data.data}]`;
+  }
+
+  override cq(): string {
+    return convertCQ(SegmentType.JSON, this.data);
+  }
+
+  static fromObj(obj: SegmentLike): Json {
+    return new Json(obj.data.data);
+  }
+
+  toObj(): SegmentLike {
+    return {
+      type: this.type,
+      data: this.data
+    };
+  }
+}
+
+/**
+ * Onebot v11 音乐消息段
+ * @extends MessageSegment 消息段抽象基类
+ */
+export class Music extends MessageSegment {
+  override type = SegmentType.MUSIC;
+  override data: {
+    type: string | "qq" | "163" | "kugou" | "kuwo" | "migu" | "custom";
+    id?: string;
+    url?: string;
+    image?: string;
+    singer?: string;
+    title?: string;
+    content?: string;
+  };
+
+  constructor(type: string, id?: string, url?: string, image?: string, singer?: string, title?: string, content?: string) {
+    super();
+    this.data = {type, id, url, image, singer, title, content};
+  }
+
+  override summary(): string {
+    return `[音乐#${this.data.type}#${this.data.id}]`;
+  }
+
+  override cq(): string {
+    return convertCQ(SegmentType.MUSIC, this.data);
+  }
+
+  static fromObj(obj: SegmentLike): Music {
+    return new Music(String(obj.data.type), String(obj.data.id), String(obj.data.url), String(obj.data.image), String(obj.data.singer), String(obj.data.title), String(obj.data.content));
+  }
+
+  toObj(): SegmentLike {
+    return {
+      type: this.type,
+      data: this.data
+    };
+  }
+}
+
+/**
+ * Onebot v11 转发消息段
+ * @extends MessageSegment 消息段抽象基类
+ */
+export class Forward extends MessageSegment {
+  override type = SegmentType.FORWARD;
+  override data: {
+    id: string;
+    content?: object | Message[];
+  };
+
+  constructor(id: string, content?: object | Message[]) {
+    super();
+    this.data = {id, content};
+  }
+
+  override summary(): string {
+    return `[转发#${this.data.id}]`;
+  }
+
+  override cq(): string {
+    return convertCQ(SegmentType.FORWARD, this.data);
+  }
+
+  static fromObj(obj: SegmentLike): Forward {
+    return new Forward(String(obj.data.id), obj.data.content);
+  }
+
+  toObj(): SegmentLike {
+    return {
+      type: this.type,
+      data: this.data
+    };
+  }
+}
+
+/**
+ * Onebot v11 戳一戳消息段，作为 Poke 的快捷方式，仅在发送时可用
+ * @extends MessageSegment 消息段抽象基类
+ */
+export class Shake extends MessageSegment {
+  override type = SegmentType.SHAKE;
+  override data: {};
+
+  constructor() {
+    super();
+    this.data = {};
+  }
+
+  override summary(): string {
+    return `[戳一戳]`;
+  }
+
+  override cq(): string {
+    return convertCQ(SegmentType.SHAKE, this.data);
+  }
+
+  static fromObj(obj: SegmentLike): Shake {
+    return new Shake();
+  }
+
+  toObj(): SegmentLike {
+    return {
+      type: this.type,
+      data: this.data
+    };
+  }
+}
+
+/**
+ * Onebot v11 匿名消息段
+ * @extends MessageSegment 消息段抽象基类
+ */
+export class Anonymous extends MessageSegment {
+  override type = SegmentType.ANONYMOUS;
+  override data: {
+    ignore?: boolean;
+  };
+
+  constructor(ignore?: boolean) {
+    super();
+    this.data = {ignore};
+  }
+
+  override summary(): string {
+    return `[匿名]`;
+  }
+
+  override cq(): string {
+    return convertCQ(SegmentType.ANONYMOUS, this.data);
+  }
+
+  static fromObj(obj: SegmentLike): Anonymous {
+    return new Anonymous(obj.data.ignore);
+  }
+
+  toObj(): SegmentLike {
+    return {
+      type: this.type,
+      data: this.data
+    };
+  }
+}
+
+/**
+ * Onebot v11 分享消息段
+ * @extends MessageSegment 消息段抽象基类
+ */
+export class Share extends MessageSegment {
+  override type = SegmentType.SHARE;
+  override data: {
+    url: string;
+    title: string;
+    content?: string;
+    image?: string;
+  };
+
+  constructor(url: string, title: string, content?: string, image?: string) {
+    super();
+    this.data = {url, title: title, content, image};
+  }
+
+  override summary(): string {
+    return `[分享#${this.data.url}]`;
+  }
+
+  override cq(): string {
+    return convertCQ(SegmentType.SHARE, this.data);
+  }
+
+  static fromObj(obj: SegmentLike): Share {
+    return new Share(String(obj.data.url), String(obj.data.title), String(obj.data.content), String(obj.data.image));
+  }
+
+  toObj(): SegmentLike {
+    return {
+      type: this.type,
+      data: this.data
+    };
+  }
+}
+
+/**
+ * Onebot v11 推荐群消息段
+ * @extends MessageSegment 消息段抽象基类
+ */
+export class Contact extends MessageSegment {
+  override type = SegmentType.CONTACT;
+  override data: {
+    type: string | "group";
+    id: string;
+  };
+
+  constructor(type: string | "group", id: string) {
+    super();
+    this.data = {type, id};
+  }
+
+  override summary(): string {
+    return `[推荐群#${this.data.type}#${this.data.id}]`;
+  }
+
+  override cq(): string {
+    return convertCQ(SegmentType.CONTACT, this.data);
+  }
+
+  static fromObj(obj: SegmentLike): Contact {
+    return new Contact(String(obj.data.type), String(obj.data.id));
+  }
+
+  toObj(): SegmentLike {
+    return {
+      type: this.type,
+      data: this.data
+    };
+  }
+}
+
+/**
+ * Onebot v11 位置消息段
+ * @extends MessageSegment 消息段抽象基类
+ */
+export class Location extends MessageSegment {
+  override type = SegmentType.LOCATION;
+  override data: {
+    lat: string;
+    lon: string;
+    title?: string;
+    content?: string;
+  };
+
+  constructor(latitude: string, longitude: string, title?: string, content?: string) {
+    super();
+    this.data = {lat: latitude, lon: longitude, title, content};
+  }
+
+  override summary(): string {
+    return `[位置#${this.data.lat}#${this.data.lon}]`;
+  }
+
+  override cq(): string {
+    return convertCQ(SegmentType.LOCATION, this.data);
+  }
+
+  static fromObj(obj: SegmentLike): Location {
+    return new Location(String(obj.data.lat), String(obj.data.lon), String(obj.data.title), String(obj.data.content));
+  }
+
+  toObj(): SegmentLike {
+    return {
+      type: this.type,
+      data: this.data
+    };
+  }
+}
+
+/**
+ * Onebot v11 转发消息节点消息段
+ * @extends MessageSegment 消息段抽象基类
+ */
+export class Node extends MessageSegment {
+  override type = SegmentType.NODE;
+  override data: {
+    userId: string;
+    nickname: string;
+    content: Message | MessageSegment[] | object[];
+  };
+
+  constructor(userId: string, nickname: string, content: Message | MessageSegment[] | object[]) {
+    super();
+    this.data = {userId, nickname, content};
+  }
+
+  override summary(): string {
+    return `[转发节点#${this.data.userId}#${this.data.nickname}]`;
+  }
+
+  override cq(): string {
+    return convertCQ(SegmentType.NODE, this.data);
+  }
+
+  static fromObj(obj: SegmentLike): Node {
+    return new Node(String(obj.data.user_id), String(obj.data.nickname), Message.fromArray(obj.data.content));
+  }
+
+  toObj(): SegmentLike {
+    return {
+      type: this.type,
+      data: this.data
+    };
+  }
+}
+
+/**
+ * Onebot v11 XML 消息段
+ * @extends MessageSegment 消息段抽象基类
+ */
+export class Xml extends MessageSegment {
+  override type = SegmentType.XML;
+  override data: {
+    data: string;
+  };
+
+  constructor(data: string) {
+    super();
+    this.data = {data};
+  }
+
+  override summary(): string {
+    return `[XML#${this.data.data}]`;
+  }
+
+  override cq(): string {
+    return convertCQ(SegmentType.XML, this.data);
+  }
+
+  static fromObj(obj: SegmentLike): Xml {
+    return new Xml(String(obj.data.data));
+  }
+
+  toObj(): SegmentLike {
+    return {
+      type: this.type,
+      data: this.data
+    };
   }
 }
