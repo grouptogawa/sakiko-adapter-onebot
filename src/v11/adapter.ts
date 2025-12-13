@@ -1,4 +1,4 @@
-import { merge, Sakiko, SakikoAdapter } from "@grouptogawa/sakiko";
+import { merge, Sakiko, SakikoAdapter } from "@togawa-dev/sakiko";
 import { Bot } from "./bot";
 import { WebSocket, WebSocketServer } from "ws";
 import { createEvent } from "./event/factory";
@@ -163,7 +163,7 @@ export class OnebotV11Adapter extends SakikoAdapter {
 
     /** 创建一个新的 Bot 实例并绑定到指定的 WebSocket 连接 */
     private _createBot(selfId: string, wsConn: WebSocket): Bot {
-        return new Bot({ selfId, config: this.sakiko.configs, adapter: this }, this.logger!, wsConn);
+        return new Bot({ selfId, config: this.sakiko.configs, adapter: this }, wsConn);
     }
 
     /** 使用指定的配置项更新当前适配器的配置 */

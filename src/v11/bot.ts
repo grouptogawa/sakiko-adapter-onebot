@@ -1,5 +1,5 @@
 import type { OnebotV11Adapter } from "./adapter";
-import { SakikoBot, type ISakikoLogger, sf } from "@grouptogawa/sakiko";
+import { SakikoBot, type ISakikoLogger, sf } from "@togawa-dev/sakiko";
 import { WebSocket } from "ws";
 import type { OB11APIAction, OB11APIRequestResponseMap } from "./payload/api/map";
 import chalk from "chalk";
@@ -36,7 +36,6 @@ export class Bot extends SakikoBot<OnebotV11Adapter> {
             config: Record<string, any>;
             adapter: OnebotV11Adapter;
         },
-        readonly logger: ISakikoLogger,
         private readonly wsConn: WebSocket,
         private readonly httpPostUrl?: string
     ) {

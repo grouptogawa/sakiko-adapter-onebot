@@ -1,6 +1,6 @@
 import chalk from "chalk";
 import { GroupMessageEvent, PrivateMessageEvent } from "./event/message-event";
-import { type ISakikoLogger } from "@grouptogawa/sakiko";
+import { type ISakikoLogger } from "@togawa-dev/sakiko";
 
 /**
  * 检查访问令牌是否符合预期
@@ -18,15 +18,9 @@ type EventLoggerMap = {
 
 export const logEventMap: EventLoggerMap = {
     PrivateMessageEvent: (logger: ISakikoLogger, e: PrivateMessageEvent) => {
-        logger.info(
-            `[${chalk.yellowBright(e.getSelfId())}] [私聊] ${e.payload.sender.nickname ?? "获取用户昵称失败"}(${e.getSenderId()}): ` +
-                e.summary()
-        );
+        logger.info(`[${chalk.yellowBright(e.getSelfId())}] [私聊] ${e.payload.sender.nickname ?? "获取用户昵称失败"}(${e.getSenderId()}): ` + e.summary());
     },
     GroupMessageEvent: (logger: ISakikoLogger, e: GroupMessageEvent) => {
-        logger.info(
-            `[${chalk.yellowBright(e.getSelfId())}] [群 ${e.payload.group_id}] ${e.payload.sender.nickname ?? "获取用户昵称失败"}(${e.getSenderId()}): ` +
-                e.summary()
-        );
+        logger.info(`[${chalk.yellowBright(e.getSelfId())}] [群 ${e.payload.group_id}] ${e.payload.sender.nickname ?? "获取用户昵称失败"}(${e.getSenderId()}): ` + e.summary());
     }
 };

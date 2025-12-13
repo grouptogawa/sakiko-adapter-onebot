@@ -25,7 +25,7 @@ import type {
 
 import type { Bot } from "../bot";
 import { OB11BaseEvent } from "./base-event";
-import type { hasSender, Targetable } from "@grouptogawa/sakiko";
+import type { hasSender, Targetable } from "@togawa-dev/sakiko";
 
 /**
  * Onebot V11 通知事件基类
@@ -33,9 +33,7 @@ import type { hasSender, Targetable } from "@grouptogawa/sakiko";
  * @template Payload 通知事件负载类型
  * @extends {OB11BaseEvent<Payload>}
  */
-export class NoticeEvent<
-    Payload extends OB11NoticePayload
-> extends OB11BaseEvent<Payload> {
+export class NoticeEvent<Payload extends OB11NoticePayload> extends OB11BaseEvent<Payload> {
     constructor(bot: Bot, payload: Payload) {
         super(bot, payload);
     }
@@ -47,12 +45,7 @@ export class NoticeEvent<
  * @template Payload 群通知事件负载类型
  * @extends {NoticeEvent<Payload>}
  */
-export class GroupNoticeEvent<
-    Payload extends OB11NoticePayload & OB11HasGroupId
->
-    extends NoticeEvent<Payload>
-    implements Targetable
-{
+export class GroupNoticeEvent<Payload extends OB11NoticePayload & OB11HasGroupId> extends NoticeEvent<Payload> implements Targetable {
     constructor(bot: Bot, payload: Payload) {
         super(bot, payload);
     }
@@ -341,10 +334,7 @@ export class GroupTitleEvent extends GroupNoticeEvent<OB11GroupTitleEventPayload
  *
  * @extends {GroupNoticeEvent<OB11GroupEssenceEventPayload>}
  */
-export class GroupEssenceEvent
-    extends GroupNoticeEvent<OB11GroupEssenceEventPayload>
-    implements hasSender
-{
+export class GroupEssenceEvent extends GroupNoticeEvent<OB11GroupEssenceEventPayload> implements hasSender {
     constructor(bot: Bot, payload: OB11GroupEssenceEventPayload) {
         super(bot, payload);
     }
@@ -390,9 +380,7 @@ export class GroupMsgEmojiLikeEvent extends GroupNoticeEvent<OB11GroupMsgEmojiLi
 
     hasTotalAbove(count: number): boolean {
         // 所有表情的点赞数之和超过指定值
-        return (
-            this.getLikes().reduce((sum, like) => sum + like.count, 0) >= count
-        );
+        return this.getLikes().reduce((sum, like) => sum + like.count, 0) >= count;
     }
 
     getLikes(): { emoji_id: string; count: number }[] {
@@ -405,10 +393,7 @@ export class GroupMsgEmojiLikeEvent extends GroupNoticeEvent<OB11GroupMsgEmojiLi
  *
  * @extends {NoticeEvent<OB11FriendPokeEventPayload>}
  */
-export class FriendPokeEvent
-    extends NoticeEvent<OB11FriendPokeEventPayload>
-    implements Targetable, hasSender
-{
+export class FriendPokeEvent extends NoticeEvent<OB11FriendPokeEventPayload> implements Targetable, hasSender {
     constructor(bot: Bot, payload: OB11FriendPokeEventPayload) {
         super(bot, payload);
     }
@@ -484,9 +469,7 @@ export class InputStatusEvent extends NoticeEvent<OB11InputStatusEventPayload> {
     }
 
     getGroupId(): string | undefined {
-        return this.payload.group_id
-            ? String(this.payload.group_id)
-            : undefined;
+        return this.payload.group_id ? String(this.payload.group_id) : undefined;
     }
 }
 

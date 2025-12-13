@@ -1,4 +1,4 @@
-import type { Messageable, Targetable, hasSender } from "@grouptogawa/sakiko";
+import type { Messageable, Targetable, hasSender } from "@togawa-dev/sakiko";
 import type { OB11GroupMessageEventPayload, OB11MessageEventPayload, OB11PrivateMessageEventPayload } from "../payload/event/message";
 
 import type { Bot } from "../bot";

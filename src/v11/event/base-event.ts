@@ -1,4 +1,4 @@
-import { SakikoBot, SakikoEvent } from "@grouptogawa/sakiko";
+import { SakikoBot, SakikoEvent } from "@togawa-dev/sakiko";
 
 import type { Bot } from "../bot";
 
