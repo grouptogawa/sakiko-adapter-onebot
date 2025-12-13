@@ -42,7 +42,7 @@ interface OnebotV11AdapterConfig {
 export class OnebotV11Adapter extends SakikoAdapter {
     override readonly name = "adapter-onebot-v11";
     override readonly displayName = "[" + chalk.cyan("OneBot V11") + "]";
-    override readonly version = "0.3.0";
+    override readonly version = "0.3.1";
     override readonly description = "Sakiko 的 OneBot V11 协议适配器";
     override readonly protocolName = "onebot-v11";
     override readonly platformName = "cross-platform";
