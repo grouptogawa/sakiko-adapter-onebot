@@ -21,7 +21,7 @@
     "private": false,
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/togawa-dev/sakiko-adapter-onebot.git"
+        "url": "git+https://github.com/togawa-dev/sakiko-adapter-onebot-v11.git"
     },
     "scripts": {
         "build": "tsup src/index.ts --format esm,cjs --dts --out-dir dist --sourcemap --clean",
